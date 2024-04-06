@@ -2,7 +2,6 @@ package main
 
 import (
 	"oryzonly/user"
-	"time"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -16,19 +15,13 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	userService := user.NewService(userRepository)
 
-	user := user.User{
-		Name:           "Ardia",
-		Email:          "ardi@example.com",
-		PasswordHash:   "password123",
-		AvatarFileName: "ardi.jpg",
-		Role:           "User",
-		Occupation:     "Programmer",
-		Phone:          "081234567687",
-		Nationality:    "Indonesia",
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
+	userInput := user.RegisterUserInput{}
+	userInput.Name = "Akmal"
+	userInput.Email = "akmal@example.com"
+	userInput.Password = "akmal123"
 
-	userRepository.Create(user)
+	userService.RegisterUser(userInput)
+
 }
