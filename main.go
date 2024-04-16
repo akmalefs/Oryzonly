@@ -1,7 +1,10 @@
 package main
 
 import (
+	"oryzonly/handler"
 	"oryzonly/user"
+
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -16,12 +19,13 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
 
-	userInput := user.RegisterUserInput{}
-	userInput.Name = "Akmal"
-	userInput.Email = "akmal@example.com"
-	userInput.Password = "akmal123"
+	router := gin.Default()
 
-	userService.RegisterUser(userInput)
+	api := router.Group("/api/v1")
 
+	api.POST("/users", userHandler.RegisterUser)
+
+	router.Run()
 }
