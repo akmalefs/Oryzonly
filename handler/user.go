@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"oryzonly/helper"
 	"oryzonly/user"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,16 +22,25 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	err := c.ShouldBindJSON(&input)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.ResponseJSON("Register failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
 	}
 
-	user, err := h.userService.RegisterUser(input)
+	newUser, err := h.userService.RegisterUser(input)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, nil)
+		response := helper.ResponseJSON("Register failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
 	}
 
-	response := helper.ResponseJSON("Account has been registered", http.StatusOK, "success", user)
+	formatter := user.UserFormat(newUser, "iniceritanyatoken")
+	response := helper.ResponseJSON("Account has been registered", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)
 }
