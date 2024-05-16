@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"oryzonly/auth"
 	"oryzonly/helper"
 	"oryzonly/user"
 
@@ -10,10 +11,11 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -39,7 +41,14 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	formatter := user.UserFormat(newUser, "iniceritanyatoken")
+	token, err := h.authService.GenerateToken(newUser.ID, newUser.Name)
+	if err != nil {
+		response := helper.ResponseJSON("Register failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.UserFormat(newUser, token)
 	response := helper.ResponseJSON("Account has been created", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)
@@ -69,7 +78,16 @@ func (h *userHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	formatter := user.UserFormat(loginUser, "iniceritanyatoken")
+	token, err := h.authService.GenerateToken(loginUser.ID, loginUser.Name)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+
+		response := helper.ResponseJSON("Login failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	formatter := user.UserFormat(loginUser, token)
 	response := helper.ResponseJSON("Login Success", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)

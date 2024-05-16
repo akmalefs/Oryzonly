@@ -1,6 +1,7 @@
 package main
 
 import (
+	"oryzonly/auth"
 	"oryzonly/handler"
 	"oryzonly/user"
 
@@ -19,7 +20,8 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	userHandler := handler.NewUserHandler(userService)
+	authService := auth.NewService()
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	router := gin.Default()
 
